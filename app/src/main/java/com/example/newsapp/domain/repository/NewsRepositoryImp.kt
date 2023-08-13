@@ -1,5 +1,6 @@
 package com.example.newsapp.domain.repository
 
+import com.example.newsapp.data.local.dao.ArticleDao
 import com.example.newsapp.data.remote.datasource.RemoteDataSourceImp
 import com.example.newsapp.data.remote.dto.Article
 import com.example.newsapp.utill.UIState
@@ -9,13 +10,15 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
-class NewsRepositoryImp @Inject constructor(private val dataSourceImp: RemoteDataSourceImp) :
-    NewsRepository {
+class NewsRepositoryImp @Inject constructor(
+    private val dataSourceImp: RemoteDataSourceImp, private val articleDao: ArticleDao
+) : NewsRepository {
     override suspend fun getNews(): Flow<UIState<List<Article>>> {
         return flow {
             emit(UIState.Loading)
             try {
                 val article = dataSourceImp.getNews()
+                articleDao.insertList(article)
                 emit(UIState.Success(article))
             } catch (e: Exception) {
                 emit(UIState.Failure(e.message ?: "Something went wrong"))
